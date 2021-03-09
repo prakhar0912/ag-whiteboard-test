@@ -25,6 +25,11 @@ let Plane = (props) => {
   let planeRef = useRef();
   let colors = useRef([]);
 
+  useFrame((e) => {
+    console.log(e)
+    planeRef.current.geometry.attributes.color.needsUpdate = true
+  })
+
   let setSickPlane = () => {
     const geometry = new THREE.BufferGeometry();
 
@@ -123,11 +128,10 @@ let Plane = (props) => {
       plane.geometry.attributes.color.array[cords.b*3 + i] = 0
       plane.geometry.attributes.color.array[cords.c*3 + i] = 0
     }
-    plane.geometry.attributes.color.needsUpdate = true
   }
 
   return (
-    <mesh ref={planeRef} {...props}  onClick = {(e) => clk(e)} onPoin geometry={setSickPlane()} material={setSickMaterial()} />
+    <mesh ref={planeRef} {...props}  onPointerMove = {(e) => clk(e)} geometry={setSickPlane()} material={setSickMaterial()} />
   );
 }
 
