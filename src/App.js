@@ -34,7 +34,7 @@ let Plane = (props) => {
     const normals = [];
 
     const size = 18;
-    const segments = 200;
+    const segments = 300;
 
     const halfSize = size / 2;
     const segmentSize = size / segments;
@@ -127,7 +127,7 @@ let Plane = (props) => {
   }
 
   return (
-    <mesh ref={planeRef} {...props} onPointerMove = {(e) => clk(e)} onPoin geometry={setSickPlane()} material={setSickMaterial()} />
+    <mesh ref={planeRef} {...props}  onClick = {(e) => clk(e)} onPoin geometry={setSickPlane()} material={setSickMaterial()} />
   );
 }
 
