@@ -25,13 +25,38 @@ let Plane = (props) => {
   let planeRef = useRef();
   let colors = useRef([]);
 
-  useFrame((e) => {
-    console.log(e)
-    planeRef.current.geometry.attributes.color.needsUpdate = true
+  colors.current = []
+
+  const { camera, scene } = useThree();
+
+  const mouse = useRef(new THREE.Vector2())
+  const raycaster = useRef(new THREE.Raycaster())
+  const segs = useRef(400)
+  let move = (event) => {
+    mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.current.y = - (event.clientY / window.innerHeight) * 2 + 1;
+  }
+  useEffect(() => {
+    window.addEventListener('mousemove', move, false)
+  }, [])
+
+  let lastcords
+  useFrame(() => {
+    raycaster.current.setFromCamera(mouse.current, camera)
+    const ints = raycaster.current.intersectObjects(scene.children)
+    for (let i = 0; i < ints.length; i++) {
+      // console.log(ints[i])
+      if (ints[i].face) {
+        drawOnFace(ints[i].face, lastcords)
+        lastcords = ints[i].face
+      }
+
+    }
   })
 
   let setSickPlane = () => {
-    const geometry = new THREE.BufferGeometry();
+
+    let geometry = new THREE.BufferGeometry();
 
     const indices = [];
 
@@ -39,7 +64,7 @@ let Plane = (props) => {
     const normals = [];
 
     const size = 18;
-    const segments = 300;
+    const segments = segs.current;
 
     const halfSize = size / 2;
     const segmentSize = size / segments;
@@ -85,19 +110,27 @@ let Plane = (props) => {
       }
 
     }
+    colors.current[0] = 0
+    colors.current[1] = 0
+    colors.current[2] = 0
 
-
+    colors.current[603] = 0
+    colors.current[604] = 0
+    colors.current[605] = 0
     geometry.setIndex(indices);
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors.current, 3));
+    geometry = geometry.toNonIndexed()
+    console.log(geometry)
     return geometry
   }
 
   let setSickMaterial = () => {
     const material = new THREE.MeshPhongMaterial({
       side: THREE.BackSide,
-      vertexColors: true
+      vertexColors: true,
+      wireframe: false
     });
     return material;
   }
@@ -118,33 +151,59 @@ let Plane = (props) => {
     return new THREE.MeshBasicMaterial({ color: "black", wireframe: true, side: THREE.DoubleSide })
   }
 
-  let clk = (e) => {
-    // console.log(e)
-    let cords = e.face
-    // console.log(e)
-    let plane = e.eventObject;
-    for (let i = 0; i < 3; i++) {
-      plane.geometry.attributes.color.array[cords.a*3 + i] = 0
-      plane.geometry.attributes.color.array[cords.b*3 + i] = 0
-      plane.geometry.attributes.color.array[cords.c*3 + i] = 0
+  let convertToXY = (cords) => {
+    let x = Math.floor((cords.a / 6) % (segs.current + 1))
+    let y = Math.floor((cords.a / 6) / (segs.current + 1))
+    return [x, y]
+    // convertToRGB(x,y)
+  }
+
+  let convertToRGB = ([x, y]) => {
+    let res = ((y * (segs.current + 1)) + x) * 6
+    return res
+  }
+
+  let drawOnFace = (cords, last) => {
+
+    let [x,y] = convertToXY(cords)
+    if (last) {
+      let lastXY = convertToXY(last)
+      // console.log(lastXY)
     }
+
+    let toConvert = [[x, y], [x-1, y],[x - 2, y + 1], [x-1, y + 1]]
+    let final = [[x,y]]
+    let rgb = final.map((ele) => convertToRGB(ele))
+    // console.log(rgb)
+    rgb.forEach((ele) => {
+      // let res = convertToRGB(ele)
+      fillColor(ele)
+    })
+
+    planeRef.current.geometry.attributes.color.needsUpdate = true;
+
+  }
+
+  let fillColor = (pos) => {
+    for (let i = 0; i < 18; i++) {
+      planeRef.current.geometry.attributes.color.array[(pos * 3) + i] = 0
+    }
+
   }
 
   return (
-    <mesh ref={planeRef} {...props}  onPointerMove = {(e) => clk(e)} geometry={setSickPlane()} material={setSickMaterial()} />
+    <mesh ref={planeRef} {...props} geometry={setSickPlane()} material={setSickMaterial()} onClick={(e) => console.log(e.face)} />
   );
 }
 
 
 let App = () => {
 
-
   return (
-    <Canvas camera = {{position: [0,0,-6]}}>
-      <ambientLight intensity = {20}/>
-      {/* <CameraController/> */}
-      <Plane position = {[0,0,0]}/>
-      {/* <gridHelper /> */}
+    <Canvas camera={{ position: [0, 0, -6] }} >
+      <ambientLight intensity={1} />
+      {/* <CameraController /> */}
+      <Plane position={[0, 0, 0]} />
     </Canvas>
   );
 }
