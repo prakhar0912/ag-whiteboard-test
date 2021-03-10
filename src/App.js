@@ -31,7 +31,7 @@ let Plane = (props) => {
 
   const mouse = useRef(new THREE.Vector2())
   const raycaster = useRef(new THREE.Raycaster())
-  const segs = useRef(400)
+  const segs = useRef(500)
   let move = (event) => {
     mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.current.y = - (event.clientY / window.innerHeight) * 2 + 1;
@@ -173,7 +173,7 @@ let Plane = (props) => {
 
     let toConvert = [[x, y], [x-1, y],[x - 2, y + 1], [x-1, y + 1]]
     let final = [[x,y]]
-    let rgb = final.map((ele) => convertToRGB(ele))
+    let rgb = toConvert.map((ele) => convertToRGB(ele))
     // console.log(rgb)
     rgb.forEach((ele) => {
       // let res = convertToRGB(ele)
